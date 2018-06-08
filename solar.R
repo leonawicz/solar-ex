@@ -7,7 +7,7 @@ yrs <- stringr::str_extract(files, "\\d{4}")
 keep_yrs <- yrs %in% 2000:2100
 files <- split(files[keep_yrs], yrs[keep_yrs])
 
-x <- mclapply(files, function(x) calc(readAll(stack(x, quick = TRUE)), mean), mc.cores = 20) # ~220 GB peak RAM at 100 years, 32 CPUs
+x <- mclapply(files, function(x) calc(readAll(stack(x, quick = TRUE)), mean), mc.cores = 21) # ~220 GB peak RAM at 100 years, 32 CPUs
 b <- brick(stack(x))
 
 r <- subset(b, 1)
@@ -42,6 +42,12 @@ library(ggthemes)
 library(dplyr)
 library(tidyr)
 library(sf)
+
+d <- readRDS("data/rsds_ts_sample.rds") %>% mutate(id = rep(1:59, 101)) %>% group_by(id) %>% arrange(id, year) %>% mutate(crsds = cumsum(rsds))
+g1 <- ggplot(filter(d, id == 1), aes(year, rsds, group = id)) + geom_line() + geom_smooth(method = "lm", color = "black", linetype = 2, se = FALSE) + labs(y = "mean annual rsds")
+g2 <- ggplot(filter(d, id == 1), aes(year, crsds, group = id)) + geom_step() + labs(y = "mean annual rsds, cumulative")
+ggsave("sample_cell_rsds_ts.png", g1)
+ggsave("sample_cell_rsds_cts.png", g2)
 
 #r <- 100 * readRDS("/workspace/UA/mfleonawicz/rsds_low48_2000-2100.rds")
 r <- 100 * readRDS("data/rsds_low48_2000-2100.rds") # percent
